@@ -1,9 +1,9 @@
 package exampleg
 
-import grails.testing.gorm.DomainUnitTest
+import grails.testing.web.controllers.ControllerUnitTest
 import spock.lang.Specification
 
-class PartnerSpec extends Specification implements DomainUnitTest<Partner> {
+class PartnerControllerSpec extends Specification implements ControllerUnitTest<PartnerController> {
 
     def setup() {
     }
