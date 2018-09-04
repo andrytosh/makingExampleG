@@ -1,7 +1,6 @@
 package exampleg
 
 import grails.gorm.transactions.Transactional
-import groovy.json.*
 import examplegsrc.*
 
 class PartnerService {
@@ -14,56 +13,38 @@ class PartnerService {
             to      = 10
         }
 
-        // Logic
-        try{
-            List partnerSchemaJSON = new ArrayList();
-            def partnerDomainLis = PartnerDomain.list(offset:from, max:to)
-            partnerDomainLis.each{
-                partnerSchemaJSON.add([id: "${it.id}", name: "${it.companyName}",
-                                       reference: "${it.ref}", locale: "${it.locale}",
-                                       expirationTime: "${it.expires}"]);
-            }
+        List partnerSchemaJSON = new ArrayList();
+        def partnerDomainLis = PartnerDomain.list(offset:from, max:to)
+        partnerDomainLis.each{
+            partnerSchemaJSON.add([id: "${it.id}", name: "${it.companyName}",
+                                   reference: "${it.ref}", locale: "${it.locale}",
+                                   expirationTime: "${it.expires}"]);
+        }
 
-            return  new JsonBuilder(partnerSchemaJSON).toPrettyString()
-        }
-        catch (Exception excp){
-            // Trying to do this but the references are not OK, and I dont understand why
-            /*
-            CustomException partnerNotFoundExcp = new CustomException(code: "404",
-                    message: "Partner with id ${partnerId} not found.")
-            */
-            // Alternative
-            def partnerNotFoundExcp = [code: "404",
-                                       message: "Partner with id ${partnerId} not found."]
-            return new JsonBuilder(partnerNotFoundExcp).toPrettyString()
-        }
+        // Return response OK
+        CustomMsg customMsg = new CustomMsg("200", "Getting a Partners.")
+        return new ResponseObject(customMsg, partnerSchemaJSON)
+
     }
 
     @Transactional(readOnly = true)
     def getPartnerById(def partnerId) {
         try{
             def partner = PartnerDomain.read(partnerId)
-            // Trying to do this but the references are not OK, and I dont understand why
-            /*
-            PartnerSchemaJSON partnerSchemaJSON = new PartnerSchemaJSON(id: partner.id, name: partner.companyName,
-                    reference: partner.ref, locale: partner.locale, expirationTime: partner.expires)
-            */
-            // Alternative
+            // Validate partner
+            this.validatePartner(partner)
+            // Schema
             def partnerSchemaJSON = [id: "${partner.id}", name: "${partner.companyName}",
                                      reference: "${partner.ref}", locale: "${partner.locale}",
                                      expirationTime: "${partner.expires}"]
-            return  new JsonBuilder(partnerSchemaJSON).toPrettyString()
+            // Return response OK
+            CustomMsg customMsg = new CustomMsg("200", "Getting a Partner by id ${partnerId}.")
+            return new ResponseObject(customMsg, partnerSchemaJSON)
         }
         catch (Exception excp){
-            // Trying to do this but the references are not OK, and I dont understand why
-            /*
-            CustomException partnerNotFoundExcp = new CustomException(code: "404",
-                    message: "Partner with id ${partnerId} not found.")
-            */
-            // Alternative
-            def partnerNotFoundExcp = [code: "404",
-                                       message: "Partner with id ${partnerId} not found."]
-            return new JsonBuilder(partnerNotFoundExcp).toPrettyString()
+            // Return response KO
+            CustomMsg customMsg = new CustomMsg("404", "Partner with id ${partnerId} not found.")
+            return new ResponseObject(customMsg, null)
         }
     }
 
@@ -79,8 +60,6 @@ class PartnerService {
     def insertPartner(String  companyName, String  ref, String  locale, String dateStr) {
         // Create a Partner
         try {
-            // Formating date
-            //Date date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dateStr)
             // Saving in DB
             def partner = new PartnerDomain(companyName: companyName, ref: ref,
                     locale: new Locale(locale), expires: new Date())
@@ -89,62 +68,74 @@ class PartnerService {
             def partnerSchemaJSON = [id: "${partner.id}", name: "${partner.companyName}",
                                      reference: "${partner.ref}", locale: "${partner.locale}",
                                      expirationTime: "${partner.expires}"]
-            return  new JsonBuilder(partnerSchemaJSON).toPrettyString()
+            // Return response OK
+            CustomMsg customMsg = new CustomMsg("200", "New Partner CREATED.")
+            return new ResponseObject(customMsg, partnerSchemaJSON)
         }
         catch (Exception excp){
-            // Alternative
-            def partnerNotFoundExcp = [code: "404",
-                                       message: "A string representing the validation error that occurred."]
-            return new JsonBuilder(partnerNotFoundExcp).toPrettyString()
+            // Return response KO
+            CustomMsg customMsg = new CustomMsg("404", "A string representing the validation error that occurred.")
+            return new ResponseObject(customMsg, null)
         }
     }
 
+    // Update a Partner
     @Transactional
     def updatePartner(def partnerId, String  companyName, String  ref, String locale, String dateStr) {
-        // Update a Partner
         try {
-            // Formating date
-            //Date date = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", dateStr)
             // Saving in DB
             def partner         = PartnerDomain.get(partnerId)
+            // Validate partner
+            this.validatePartner(partner)
+            // Setting values
             partner.companyName = companyName
             partner.ref         = ref
             partner.locale      = new Locale(locale)
             partner.expires     = new Date()
             partner.save(flush: true)
-            // Json
+            // JsonShema
             def partnerSchemaJSON = [id: "${partner.id}", name: "${partner.companyName}",
                                      reference: "${partner.ref}", locale: "${partner.locale}",
                                      expirationTime: "${partner.expires}"]
-            return  new JsonBuilder(partnerSchemaJSON).toPrettyString()
+            // Return response OK
+            CustomMsg customMsg = new CustomMsg("200", "Partner with id ${partnerId} has been UPDATE.")
+            return new ResponseObject(customMsg, partnerSchemaJSON)
         }
-        catch (Exception excp){
-            // Alternative
-            def partnerNotFoundExcp = [code: "404",
-                                       message: "Partner with id ${partnerId} not found."]
-            return new JsonBuilder(partnerNotFoundExcp).toPrettyString()
+        catch (RuntimeException excp){
+            // Return response KO
+            CustomMsg customMsg = new CustomMsg("404", "Partner with id ${partnerId} not found.")
+            return new ResponseObject(customMsg, null)
         }
     }
 
+    // Delete a Partner
     @Transactional
     def deletePartner(def partnerId) {
         // Detele Partner
         def partner
 
         try {
+            // Getting a partner
             partner = PartnerDomain.get(partnerId)
+            // Validate partner
+            this.validatePartner(partner)
+            // Delete
             partner.delete()
+
+            // Return response OK
+            CustomMsg customMsg = new CustomMsg("200", "Partner with id ${partnerId} has been DELETE.")
+            return new ResponseObject(customMsg, null)
         }
-        catch (Exception excp){
-            // Trying to do this but the references are not OK, and I dont understand why
-            /*
-            CustomException partnerNotFoundExcp = new CustomException(code: "404",
-                    message: "Partner with id ${partnerId} not found.")
-            */
-            // Alternative
-            def partnerNotFoundExcp = [code: "404",
-                                       message: "Partner with id ${partnerId} not found."]
-            return new JsonBuilder(partnerNotFoundExcp).toPrettyString()
+        catch (RuntimeException excp){
+            // Return response KO
+            CustomMsg customMsg = new CustomMsg("404", "Partner with id ${partnerId} not found.")
+            return new ResponseObject(customMsg, null)
         }
+    }
+
+    // Validations
+    def validatePartner(def partner){
+        if(partnerId == null)
+            throw new RuntimeException()
     }
 }
