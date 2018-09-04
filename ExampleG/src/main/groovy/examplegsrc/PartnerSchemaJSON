@@ -1,4 +1,4 @@
-package exampleg
+package examplegsrc
 
 class PartnerSchemaJSON{
     def id

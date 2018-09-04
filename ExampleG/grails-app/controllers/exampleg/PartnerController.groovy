@@ -6,32 +6,36 @@ class PartnerController {
 
     def index() {
         // Creating
-        //partnerServ.insertPartner("Isban", "4857", "en_ES")
-        /*for(int i = 0; i < 30; i++){
-            partnerServ.insertPartner("Isban " + i, "4857", "en_ES")
-        }*/
-        // Updating
-        //partnerServ.updatePartner(2, "Iberdrola", "4857", "en_ES")
-        // Deleting
-        def str = partnerServ.deletePartner(200)
-        // Getting partner by ID
-        //def partner = partnerServ.getPartnerById(200)
-        // Getting partner FROM - TO
-        //def partners = partnerServ.getPartners()
-        //def partners = partnerServ.getPartners(0, 500)
-
-        /*def testStr = "";
-
-        partners.each {
-            testStr += " ${it.id} - ${it.companyName}"
-        }
-
+        partnerServ.insertPartnerIndex("Example", "4857", "en_ES")
         // Rendering
-        render "Hello Word! " + testStr + " size: " + partners.size()
-        */
+        render  "New register inserted in DB";
+    }
 
-        // Rendering
-        render  str;
+    def getPartners(){
+        def responseJson = new PartnerService().getPartners(params.from, params.size)
+        render(status: 200, contentType: "application/json", text: responseJson)
+    }
+
+    def getPartnerById(){
+        def responseJson  = new PartnerService().getPartnerById(params.id)
+        render(status: 200, contentType: "application/json", text: responseJson)
+    }
+
+    def insertPartner(){
+        def responseJson  = new PartnerService().insertPartner(params.name, params.reference,
+                params.locale, params.expirationTime)
+        render(status: 201, contentType: "application/json", text: responseJson)
+    }
+
+    def updatePartner(){
+        def responseJson  = new PartnerService().updatePartner(params.id, params.name, params.reference,
+                params.locale, params.expirationTime)
+        render(status: 200, contentType: "application/json", text: responseJson)
+    }
+
+    def delete(){
+        def responseJson = new PartnerService().deletePartner(params.id)
+        render(status: 200, contentType: "application/json", text: responseJson)
     }
 
 }
