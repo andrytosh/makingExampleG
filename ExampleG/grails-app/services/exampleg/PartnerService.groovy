@@ -29,10 +29,9 @@ class PartnerService {
 
     @Transactional(readOnly = true)
     def getPartnerById(def partnerId) {
-        try{
-            def partner = PartnerDomain.read(partnerId)
-            // Validate partner
-            this.validatePartner(partner)
+        // Get a partner
+        def partner = PartnerDomain.read(partnerId)
+        if(partner){
             // Schema
             def partnerSchemaJSON = [id: "${partner.id}", name: "${partner.companyName}",
                                      reference: "${partner.ref}", locale: "${partner.locale}",
@@ -40,8 +39,7 @@ class PartnerService {
             // Return response OK
             CustomMsg customMsg = new CustomMsg("200", "Getting a Partner by id ${partnerId}.")
             return new ResponseObject(customMsg, partnerSchemaJSON)
-        }
-        catch (Exception excp){
+        }else{
             // Return response KO
             CustomMsg customMsg = new CustomMsg("404", "Partner with id ${partnerId} not found.")
             return new ResponseObject(customMsg, null)
@@ -69,7 +67,7 @@ class PartnerService {
                                      reference: "${partner.ref}", locale: "${partner.locale}",
                                      expirationTime: "${partner.expires}"]
             // Return response OK
-            CustomMsg customMsg = new CustomMsg("200", "New Partner CREATED.")
+            CustomMsg customMsg = new CustomMsg("201", "New Partner CREATED.")
             return new ResponseObject(customMsg, partnerSchemaJSON)
         }
         catch (Exception excp){
@@ -82,11 +80,9 @@ class PartnerService {
     // Update a Partner
     @Transactional
     def updatePartner(def partnerId, String  companyName, String  ref, String locale, String dateStr) {
-        try {
-            // Saving in DB
-            def partner         = PartnerDomain.get(partnerId)
-            // Validate partner
-            this.validatePartner(partner)
+        // Get a partner
+        def partner = PartnerDomain.read(partnerId)
+        if(partner){
             // Setting values
             partner.companyName = companyName
             partner.ref         = ref
@@ -100,8 +96,7 @@ class PartnerService {
             // Return response OK
             CustomMsg customMsg = new CustomMsg("200", "Partner with id ${partnerId} has been UPDATE.")
             return new ResponseObject(customMsg, partnerSchemaJSON)
-        }
-        catch (RuntimeException excp){
+        }else{
             // Return response KO
             CustomMsg customMsg = new CustomMsg("404", "Partner with id ${partnerId} not found.")
             return new ResponseObject(customMsg, null)
@@ -111,31 +106,18 @@ class PartnerService {
     // Delete a Partner
     @Transactional
     def deletePartner(def partnerId) {
-        // Detele Partner
-        def partner
-
-        try {
-            // Getting a partner
-            partner = PartnerDomain.get(partnerId)
-            // Validate partner
-            this.validatePartner(partner)
+        // Get a partner
+        def partner = PartnerDomain.read(partnerId)
+        if(partner){
             // Delete
             partner.delete()
-
             // Return response OK
             CustomMsg customMsg = new CustomMsg("200", "Partner with id ${partnerId} has been DELETE.")
             return new ResponseObject(customMsg, null)
-        }
-        catch (RuntimeException excp){
+        }else{
             // Return response KO
             CustomMsg customMsg = new CustomMsg("404", "Partner with id ${partnerId} not found.")
             return new ResponseObject(customMsg, null)
         }
-    }
-
-    // Validations
-    def validatePartner(def partner){
-        if(partnerId == null)
-            throw new RuntimeException()
     }
 }

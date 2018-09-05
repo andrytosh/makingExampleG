@@ -23,7 +23,7 @@ class PartnerController {
         def responseJson    = new JsonBuilder(objectJson).toPrettyString()
 
         // Rendering
-        render(status: 200, contentType: "application/json", text: responseJson)
+        render(status: responseCode, contentType: "application/json", text: responseJson)
 
     }
 
@@ -33,11 +33,12 @@ class PartnerController {
         def responseObj  = new PartnerService().getPartnerById(params.id)
         // Transforming the response
         def objectJson      = responseObj.objectJson
-        def responseCode    = responseObj.customMsg.code
-        def responseJson    = new JsonBuilder(objectJson).toPrettyString()
+        def customMsg       = responseObj.customMsg
+        def responseCode    = customMsg.code
+        def responseJson    = new JsonBuilder(("200" == responseCode) ? objectJson : customMsg).toPrettyString()
 
         // Rendering
-        render(status: 200, contentType: "application/json", text: responseJson)
+        render(status: responseCode, contentType: "application/json", text: responseJson)
     }
 
     // Create Partner
@@ -47,11 +48,12 @@ class PartnerController {
                 params.locale, params.expirationTime)
         // Transforming the response
         def objectJson      = responseObj.objectJson
-        def responseCode    = responseObj.customMsg.code
-        def responseJson    = new JsonBuilder(objectJson).toPrettyString()
+        def customMsg       = responseObj.customMsg
+        def responseCode    = customMsg.code
+        def responseJson    = new JsonBuilder(("201" == responseCode) ? objectJson : customMsg).toPrettyString()
 
         // Rendering
-        render(status: 201, contentType: "application/json", text: responseJson)
+        render(status: responseCode, contentType: "application/json", text: responseJson)
     }
 
     // Update a Partner
@@ -63,11 +65,12 @@ class PartnerController {
                 jsonParams.locale, jsonParams.expirationTime)
         // Transforming the response
         def objectJson      = responseObj.objectJson
-        def responseCode    = responseObj.customMsg.code
-        def responseJson    = new JsonBuilder(objectJson).toPrettyString()
+        def customMsg       = responseObj.customMsg
+        def responseCode    = customMsg.code
+        def responseJson    = new JsonBuilder(("200" == responseCode) ? objectJson : customMsg).toPrettyString()
 
         // Rendering
-        render(status: 200, contentType: "application/json", text: responseJson)
+        render(status: responseCode, contentType: "application/json", text: responseJson)
     }
 
     // Delete a Partner by ID
